@@ -26,11 +26,9 @@ float4 MaterialDiffuse : DIFFUSE  < string Object = "Geometry"; >;
 static float alpha1 = MaterialDiffuse.a;
 
 float Intensity : CONTROLOBJECT < string name = "(self)"; string item = "Si";>;
-float Frequency : CONTROLOBJECT < string name = "(self)"; string item = "X";>;
-float Speed : CONTROLOBJECT < string name = "(self)"; string item = "Y";>;
-float Value1 : CONTROLOBJECT < string name = "(self)"; string item = "Rx";>;
-float Value2 : CONTROLOBJECT < string name = "(self)"; string item = "Ry";>;
-float Block : CONTROLOBJECT < string name = "(self)"; string item = "Tr";>;
+float XIntensity : CONTROLOBJECT < string name = "(self)"; string item = "X";>;
+float YIntensity : CONTROLOBJECT < string name = "(self)"; string item = "Y";>;
+float Flag : CONTROLOBJECT < string name = "(self)"; string item = "Rx";>;
 float2 ViewportSize : VIEWPORTPIXELSIZE;
 
 static float2 ViewportOffset = (float2(0.5,0.5)/ViewportSize);
@@ -72,16 +70,22 @@ VS_OUTPUT VS_passDraw( float4 Pos : POSITION, float2 Tex : TEXCOORD0 ) {
 }
 
 float4 PS_ColorDispalcement( float2 Tex: TEXCOORD0 ) : COLOR {   
-   float Color=1;
-   float2 fTexSize=ViewportSize;
-   float2 fmosaicSize= float2(4,4);
-   float2 fintXY=float2(Tex.x*fTexSize.x,Tex.y*fTexSize.y);
-   float2 fXYmosaic = float2(int(fintXY.x/fmosaicSize.x)*fmosaicSize.x,int(fintXY.y/fmosaicSize.y)*fmosaicSize.y)+0.5*fmosaicSize;
-   float2 fDelXY=fXYmosaic-fintXY;
-   float2 fUVmosaic=float2(fXYmosaic.x/fTexSize.x,fXYmosaic.y/fTexSize.y);
-   if( length(fDelXY) <0.5*fmosaicSize.x)
+    float4 Color=1;
+    float2 fTexSize=ViewportSize;
+    float2 fmosaicSize= float2(XIntensity*Intensity/10,YIntensity*Intensity/10);
+	float2 fintXY=float2(Tex.x*fTexSize.x,Tex.y*fTexSize.y);
+	float2 MosicUV=float2(int(fintXY.x/fmosaicSize.x)*fmosaicSize.x,int(fintXY.y/fmosaicSize.y)*fmosaicSize.y);
+	float2 UVMosaic=float2(MosicUV.x/fTexSize.x,MosicUV.y/fTexSize.y);
+    float2 fXYmosaic = float2(int(fintXY.x/fmosaicSize.x)*fmosaicSize.x,int(fintXY.y/fmosaicSize.y)*fmosaicSize.y)+0.5*fmosaicSize;
+    float2 fDelXY=fXYmosaic-fintXY;
+    float2 fUVmosaic=float2(fXYmosaic.x/fTexSize.x,fXYmosaic.y/fTexSize.y);
+    if ( Flag) {
+	if( length(fDelXY) <0.5*fmosaicSize.x)
      return tex2D(ScnSamp,fUVmosaic);
     else return float4(0,0,0,0);	 
+	} else{
+	return tex2D(ScnSamp,UVMosaic);
+	}
 }
 
 technique ColorShift <
